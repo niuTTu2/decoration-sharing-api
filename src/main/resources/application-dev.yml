@@ -1,0 +1,13 @@
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/decoration_sharing?useSSL=false&serverTimezone=UTC&characterEncoding=utf8
+    username: root
+    password: root
+  jpa:
+    show-sql: true
+
+logging:
+  level:
+    com.huang.decorationsharingapi: DEBUG
+    org.springframework.web: INFO
+    org.hibernate: INFO

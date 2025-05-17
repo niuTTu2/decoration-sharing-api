@@ -1,0 +1,40 @@
+spring:
+  profiles:
+    active: dev
+  application:
+    name: decoration-sharing-api
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    database-platform: org.hibernate.dialect.MySQL8Dialect
+    hibernate:
+      ddl-auto: validate  # 验证模式，确保实体与数据库结构匹配
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+  mvc:
+
+    static-path-pattern: /static/**
+  web:
+    resources:
+      static-locations: classpath:/static/
+server:
+  port: 8080
+  servlet:
+    context-path: /api
+
+# JWT配置
+jwt:
+  secret: Ct6LaT56k7XgRf9ZsPnY4qJxCzdAwEeD3mBu2vQKb8hF5iNjHaVoWl1rIyOtUG
+  expiration: 86400000  # 24小时 (毫秒)
+
+# 文件上传配置
+file:
+  upload-dir: D:\毕业设计\皇军太\decoration-sharing\public\uploads
+  allowed-types: image/jpeg,image/png,image/jpg
+  max-size: 10485760  # 10MB (字节)
