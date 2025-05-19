@@ -120,6 +120,7 @@ public class AdminController {
     }
 
 
+
     @PutMapping("/materials/{id}/approve")
     public ResponseEntity<MaterialResponse> approveMaterial(@PathVariable Long id) {
         Material material = adminService.approveMaterial(id);
