@@ -120,4 +120,32 @@ public class FileStorageService {
             return "jpg"; // 默认扩展名
         }
     }
+
+    // 在现有的 FileStorageService 类中添加此方法
+
+    /**
+     * 存储用户头像文件
+     */
+    public String storeAvatar(MultipartFile file) {
+        validateFile(file);
+
+        // 生成唯一文件名
+        String originalFileName = StringUtils.cleanPath(file.getOriginalFilename());
+        String fileExtension = getFileExtension(originalFileName);
+        String fileName = "avatar_" + UUID.randomUUID().toString() + "." + fileExtension;
+
+        try {
+            // 确保头像目录存在
+            Path avatarStorageLocation = this.fileStorageLocation.resolve("avatars");
+            Files.createDirectories(avatarStorageLocation);
+
+            // 创建目标路径
+            Path targetLocation = avatarStorageLocation.resolve(fileName);
+            Files.copy(file.getInputStream(), targetLocation, StandardCopyOption.REPLACE_EXISTING);
+
+            return "avatars/" + fileName;
+        } catch (IOException ex) {
+            throw new FileStorageException("无法存储头像文件 " + fileName, ex);
+        }
+    }
 }

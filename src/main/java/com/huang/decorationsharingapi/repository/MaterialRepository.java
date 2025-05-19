@@ -3,6 +3,7 @@ package com.huang.decorationsharingapi.repository;
 
 import com.huang.decorationsharingapi.entity.Category;
 import com.huang.decorationsharingapi.entity.Material;
+import com.huang.decorationsharingapi.entity.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -22,6 +23,8 @@ public interface MaterialRepository extends JpaRepository<Material, Long>, JpaSp
     long countByStatus(Material.Status status);
 
     long countByCreatedAtBefore(LocalDateTime date);
+    // 在 MaterialRepository 接口中添加
+    long countByUser(User user);
 
     @Query("SELECT m FROM Material m JOIN Favorite f ON m.id = f.material.id " +
             "WHERE f.user.id = :userId " +

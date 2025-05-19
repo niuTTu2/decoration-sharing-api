@@ -14,4 +14,6 @@ public interface FavoriteRepository extends JpaRepository<Favorite, Long> {
     Optional<Favorite> findByUserAndMaterial(User user, Material material);
 
     boolean existsByUserAndMaterial(User user, Material material);
+    // 在 FavoriteRepository 接口中添加
+    long countByUser(User user);
 }

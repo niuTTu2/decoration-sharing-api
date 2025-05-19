@@ -1,6 +1,5 @@
 package com.huang.decorationsharingapi.service;
 
-
 import com.huang.decorationsharingapi.dto.request.MaterialRequest;
 import com.huang.decorationsharingapi.entity.Category;
 import com.huang.decorationsharingapi.entity.Favorite;
@@ -41,6 +40,11 @@ public class MaterialService {
         Sort sortOrder = createSortOrder(sort);
         Pageable pageable = PageRequest.of(page, size, sortOrder);
 
+        // 如果status为空，默认为APPROVED
+        if (status == null || status.isEmpty()) {
+            status = "APPROVED";
+        }
+
         Specification<Material> spec = createMaterialSpecification(categoryId, status, keyword, username);
         return materialRepository.findAll(spec, pageable);
     }
@@ -57,7 +61,12 @@ public class MaterialService {
     public Page<Material> searchMaterials(String keyword, int page, int size, Long categoryId, String status) {
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
 
-        Specification<Material> spec = createMaterialSpecification(categoryId, keyword, status,null);
+        // 如果status为空，默认为APPROVED
+        if (status == null || status.isEmpty()) {
+            status = "APPROVED";
+        }
+
+        Specification<Material> spec = createMaterialSpecification(categoryId, status, keyword, null);
         return materialRepository.findAll(spec, pageable);
     }
 
@@ -118,6 +127,19 @@ public class MaterialService {
             materialRepository.save(material);
             return true;
         }
+    }
+
+    /**
+     * 检查用户是否收藏了素材
+     */
+    public boolean checkIsFavorite(Long materialId, String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "username", username));
+
+        Material material = materialRepository.findById(materialId)
+                .orElseThrow(() -> new ResourceNotFoundException("Material", "id", materialId));
+
+        return favoriteRepository.findByUserAndMaterial(user, material).isPresent();
     }
 
     public Page<Material> getUserMaterials(String username, int page, int size, String status, Long categoryId, String keyword) {
@@ -209,7 +231,8 @@ public class MaterialService {
                     predicates.add(cb.equal(root.get("status"), status));
                 } catch (IllegalArgumentException e) {
                     System.err.println("无效的状态值: " + statusStr + ", 将被忽略");
-                    // 无效的状态，忽略这个过滤条件
+                    // 默认设为已审核状态
+                    predicates.add(cb.equal(root.get("status"), Material.Status.APPROVED));
                 }
             }
 
