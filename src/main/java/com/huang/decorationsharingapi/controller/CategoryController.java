@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 import java.util.stream.Collectors;
-
+//处理装修材料分类相关的操作
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/categories")

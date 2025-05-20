@@ -10,10 +10,10 @@ import java.util.List;
 @Data
 public class MaterialRequest {
     @NotBlank(message = "素材标题不能为空")
-    @Size(min = 5, max = 100, message = "标题长度应在5-100个字符之间")
+    @Size(min = 3, max = 100, message = "标题长度应在3-100个字符之间")
     private String title;
 
-    @Size(min = 10, max = 1000, message = "描述长度应在10-1000个字符之间")
+    @Size(min = 3, max = 1000, message = "描述长度应在3-1000个字符之间")
     private String description;
 
     @NotNull(message = "请选择分类")

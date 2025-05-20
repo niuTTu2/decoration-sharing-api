@@ -26,7 +26,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
-@RequiredArgsConstructor
+@RequiredArgsConstructor//将所有的final字段注入到构造函数中
 public class MaterialService {
 
     private final MaterialRepository materialRepository;

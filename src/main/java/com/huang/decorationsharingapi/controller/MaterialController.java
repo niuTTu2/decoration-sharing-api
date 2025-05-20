@@ -22,7 +22,7 @@ import javax.validation.Valid;
 import java.security.Principal;
 import java.util.List;
 import java.util.stream.Collectors;
-
+//处理装修材料本身相关的操作
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/materials")

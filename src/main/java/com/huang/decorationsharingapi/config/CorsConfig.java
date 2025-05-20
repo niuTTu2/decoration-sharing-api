@@ -1,4 +1,4 @@
-package com.huang.decorationsharingapi.config;
+/**package com.huang.decorationsharingapi.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -8,6 +8,13 @@ import org.springframework.web.filter.CorsFilter;
 
 import java.util.Arrays;
 
+
+ * CorsConfig.java
+ *
+ * 功能: 配置跨域资源共享 (CORS)。当您的前端应用和后端 API 不在同一个域名或端口时，浏览器会阻止跨域请求。
+ *         此类允许您定义哪些来源、方法和头部信息是被允许的。
+ * 实现方式: 通常会实现 WebMvcConfigurer 接口，并重写 addCorsMappings 方法来配置CORS规则。
+ *
 @Configuration
 public class CorsConfig {
 
@@ -45,4 +52,4 @@ public class CorsConfig {
 
         return new CorsFilter(source);
     }
-}
+}*/

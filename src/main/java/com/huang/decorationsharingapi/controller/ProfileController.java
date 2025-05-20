@@ -20,7 +20,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.Valid;
 import java.security.Principal;
-
+//处理用户个人资料相关的操作
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/profile")

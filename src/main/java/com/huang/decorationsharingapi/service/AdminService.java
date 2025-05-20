@@ -244,7 +244,7 @@ public class AdminService {
         categoryRepository.delete(category);
     }
 
-    // ========== 统计数据 ==========
+    /** ========== 统计数据 ==========
     public AdminStatsResponse getStats() {
         long totalUsers = userRepository.count();
         long totalMaterials = materialRepository.count();
@@ -271,5 +271,5 @@ public class AdminService {
                 .userGrowth(Math.round(userGrowthRate * 10) / 10.0)  // 保留一位小数
                 .materialGrowth(Math.round(materialGrowthRate * 10) / 10.0)  // 保留一位小数
                 .build();
-    }
+    }*/
 }

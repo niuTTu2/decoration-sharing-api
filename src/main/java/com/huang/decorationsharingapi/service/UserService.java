@@ -15,15 +15,15 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class UserService {
 
-    private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
+    private final UserRepository userRepository;//注入 UserRepository，用于用户数据的数据库操作
+    private final PasswordEncoder passwordEncoder;//// 注入 PasswordEncoder，用于密码加密
 
     public User findByUsername(String username) {
         return userRepository.findByUsername(username)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "username", username));
     }
 
-    public boolean existsByUsername(String username) {
+    public boolean existsByUsername(String username) {//
         return userRepository.existsByUsername(username);
     }
 
@@ -32,17 +32,17 @@ public class UserService {
     }
 
     @Transactional
-    public User registerUser(RegisterRequest registerRequest) {
+    public User registerUser(RegisterRequest registerRequest) {//使用Builder模式创建一个新的User对象
         User user = User.builder()
                 .username(registerRequest.getUsername())
                 .email(registerRequest.getEmail())
                 .password(passwordEncoder.encode(registerRequest.getPassword()))
                 .avatar("https://joeschmoe.io/api/v1/" + registerRequest.getUsername())
-                .role(User.Role.USER)
-                .status(User.Status.ACTIVE)
+                .role(User.Role.USER)//默认角色为USER
+                .status(User.Status.ACTIVE)//默认状态为ACTIVE
                 .build();
 
-        return userRepository.save(user);
+        return userRepository.save(user);//存入数据库中
     }
 
     @Transactional

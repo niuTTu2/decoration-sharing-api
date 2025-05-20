@@ -44,7 +44,7 @@ public class User {
 
     @Enumerated(EnumType.STRING)
     @Column(columnDefinition = "ENUM('ACTIVE', 'BLOCKED')")
-    private Status status = Status.ACTIVE;
+    private Status status = Status.ACTIVE; //
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
@@ -53,7 +53,7 @@ public class User {
     @UpdateTimestamp
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
-
+//枚举
     public enum Role {
         USER, ADMIN
     }

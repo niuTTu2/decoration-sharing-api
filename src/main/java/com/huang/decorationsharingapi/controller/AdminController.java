@@ -142,7 +142,7 @@ public class AdminController {
         return ResponseEntity.ok(new MessageResponse("素材已删除"));
     }
 
-    // ========== 分类管理 ==========
+    /** ========== 分类管理 ==========
     @PostMapping("/categories")
     public ResponseEntity<CategoryResponse> createCategory(@Valid @RequestBody CategoryRequest categoryRequest) {
         Category category = adminService.createCategory(categoryRequest);
@@ -169,8 +169,9 @@ public class AdminController {
     public ResponseEntity<AdminStatsResponse> getStats() {
         return ResponseEntity.ok(adminService.getStats());
     }
+     **/
 
-    // ========== 辅助方法 ==========
+    // ========== 辅助方法 将实体转化为DTO==========
     private UserResponse convertToUserResponse(User user) {
         return UserResponse.builder()
                 .id(user.getId())
@@ -183,6 +184,7 @@ public class AdminController {
                 .createdAt(user.getCreatedAt())
                 .build();
     }
+
 
     private MaterialResponse convertToMaterialResponse(Material material) {
         return MaterialResponse.builder()
@@ -203,15 +205,15 @@ public class AdminController {
                 .build();
     }
 
-    private CategoryResponse convertToCategoryResponse(Category category) {
-        return CategoryResponse.builder()
-                .id(category.getId())
-                .name(category.getName())
-                .description(category.getDescription())
-                .iconUrl(category.getIconUrl())
-                .color(category.getColor())
-                .sort(category.getSort())
-                .createdAt(category.getCreatedAt())
-                .build();
-    }
+    //private CategoryResponse convertToCategoryResponse(Category category) {
+    //    return CategoryResponse.builder()
+    //            .id(category.getId())
+    //            .name(category.getName())
+    //            .description(category.getDescription())
+    //            .iconUrl(category.getIconUrl())
+    ////            .color(category.getColor())
+    //            .sort(category.getSort())
+    //            .createdAt(category.getCreatedAt())
+    //            .build();
+    //}
 }
