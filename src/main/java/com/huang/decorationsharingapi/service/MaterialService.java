@@ -131,15 +131,23 @@ public class MaterialService {
 
     /**
      * 检查用户是否收藏了素材
+     * @param materialId 素材ID
+     * @param username 用户名
+     * @return 是否收藏
      */
     public boolean checkIsFavorite(Long materialId, String username) {
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new ResourceNotFoundException("User", "username", username));
+        try {
+            User user = userRepository.findByUsername(username)
+                    .orElseThrow(() -> new ResourceNotFoundException("User", "username", username));
 
-        Material material = materialRepository.findById(materialId)
-                .orElseThrow(() -> new ResourceNotFoundException("Material", "id", materialId));
+            Material material = materialRepository.findById(materialId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Material", "id", materialId));
 
-        return favoriteRepository.findByUserAndMaterial(user, material).isPresent();
+            return favoriteRepository.findByUserAndMaterial(user, material).isPresent();
+        } catch (Exception e) {
+            // 处理异常，例如用户或素材不存在
+            return false;
+        }
     }
 
     public Page<Material> getUserMaterials(String username, int page, int size, String status, Long categoryId, String keyword) {
@@ -248,4 +256,5 @@ public class MaterialService {
             return predicates.isEmpty() ? null : cb.and(predicates.toArray(new Predicate[0]));
         };
     }
+
 }
