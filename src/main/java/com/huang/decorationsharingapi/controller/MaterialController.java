@@ -6,15 +6,12 @@ import com.huang.decorationsharingapi.dto.response.MaterialDetailResponse;
 import com.huang.decorationsharingapi.dto.response.MaterialResponse;
 import com.huang.decorationsharingapi.dto.response.PagedResponse;
 import com.huang.decorationsharingapi.entity.Material;
-import com.huang.decorationsharingapi.entity.User;
 import com.huang.decorationsharingapi.service.MaterialService;
-import com.huang.decorationsharingapi.service.UserService;
+import com.huang.decorationsharingapi.repository.FavoriteRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -29,7 +26,7 @@ import java.util.stream.Collectors;
 public class MaterialController {
 
     private final MaterialService materialService;
-    private final UserService userService;
+    private final FavoriteRepository favoriteRepository;
 
     @GetMapping
     public ResponseEntity<PagedResponse<MaterialResponse>> getMaterials(
@@ -37,34 +34,21 @@ public class MaterialController {
             @RequestParam(defaultValue = "12") int pageSize,
             @RequestParam(required = false) Long categoryId,
             @RequestParam(required = false) String sort,
-            @RequestParam(required = false) String status,
-            @RequestParam(required = false) String keyword,
-            Authentication authentication) {
+            @RequestParam(required = false) String status, // 新增status参数
+            @RequestParam(required = false) String keyword, // 新增keyword参数
+            Principal principal) {
 
-        // 检查用户角色
-        boolean isAdmin = false;
-        // 将username声明为final，确保它不会被修改
-        final String username;
-
-        if (authentication != null) {
-            username = authentication.getName();
-            isAdmin = authentication.getAuthorities().stream()
-                    .map(GrantedAuthority::getAuthority)
-                    .anyMatch(a -> a.equals("ROLE_ADMIN"));
-        } else {
-            username = null;
+        // 如果没有指定状态且不是管理员，强制设置为APPROVED
+        if (status == null || status.isEmpty()) {
+            status = "APPROVED";
         }
 
-        // 非管理员用户只能查看已审核通过的素材
-        String effectiveStatus = status;
-        if (!isAdmin && (effectiveStatus == null || effectiveStatus.isEmpty())) {
-            effectiveStatus = "APPROVED";
-        }
+        // 获取用户名，用于检查收藏状态
+        final String username = principal != null ? principal.getName() : null;
 
         Page<Material> materials = materialService.getMaterials(
-                page, pageSize, categoryId, sort, effectiveStatus, keyword, username);
+                page, pageSize, categoryId, sort, status, keyword, username);
 
-        // 现在username是effectively final，可以在lambda中使用
         List<MaterialResponse> content = materials.getContent().stream()
                 .map(material -> convertToMaterialResponse(material, username))
                 .collect(Collectors.toList());
@@ -80,23 +64,13 @@ public class MaterialController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<MaterialDetailResponse> getMaterialById(
-            @PathVariable Long id, Authentication authentication) {
-
-        String username = authentication != null ? authentication.getName() : null;
-        boolean isAdmin = false;
-
-        if (authentication != null) {
-            isAdmin = authentication.getAuthorities().stream()
-                    .map(GrantedAuthority::getAuthority)
-                    .anyMatch(a -> a.equals("ROLE_ADMIN"));
-        }
+    public ResponseEntity<MaterialDetailResponse> getMaterialById(@PathVariable Long id, Principal principal) {
+        final String username = principal != null ? principal.getName() : null;
 
         Material material = materialService.getMaterialById(id, username);
 
-        // 检查素材状态，非管理员/素材上传者只能查看已审核通过的素材
-        boolean isUploader = username != null && username.equals(material.getUser().getUsername());
-        if (!isAdmin && !isUploader && material.getStatus() != Material.Status.APPROVED) {
+        // 非管理员只能查看已审核的素材
+        if (username == null && material.getStatus() != Material.Status.APPROVED) {
             return ResponseEntity.notFound().build();
         }
 
@@ -109,28 +83,14 @@ public class MaterialController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "12") int pageSize,
             @RequestParam(required = false) Long categoryId,
-            Authentication authentication) {
+            Principal principal) {
 
-        // 将username声明为final
-        final String username;
-        boolean isAdmin = false;
+        // 强制设置状态为APPROVED
+        final String status = "APPROVED";
+        final String username = principal != null ? principal.getName() : null;
 
-        if (authentication != null) {
-            username = authentication.getName();
-            isAdmin = authentication.getAuthorities().stream()
-                    .map(GrantedAuthority::getAuthority)
-                    .anyMatch(a -> a.equals("ROLE_ADMIN"));
-        } else {
-            username = null;
-        }
+        Page<Material> materials = materialService.searchMaterials(keyword, page, pageSize, categoryId, status);
 
-        // 非管理员用户默认只搜索已审核通过的素材
-        String effectiveStatus = isAdmin ? null : "APPROVED";
-
-        Page<Material> materials = materialService.searchMaterials(
-                keyword, page, pageSize, categoryId, effectiveStatus);
-
-        // 使用final或effectively final的username变量
         List<MaterialResponse> content = materials.getContent().stream()
                 .map(material -> convertToMaterialResponse(material, username))
                 .collect(Collectors.toList());
@@ -151,8 +111,9 @@ public class MaterialController {
             @Valid @ModelAttribute MaterialRequest materialRequest,
             Principal principal) {
 
-        Material material = materialService.uploadMaterial(materialRequest, file, principal.getName());
-        return ResponseEntity.ok(convertToMaterialResponse(material, principal.getName()));
+        final String username = principal.getName();
+        Material material = materialService.uploadMaterial(materialRequest, file, username);
+        return ResponseEntity.ok(convertToMaterialResponse(material, username));
     }
 
     @PostMapping("/{id}/favorite")
@@ -162,8 +123,8 @@ public class MaterialController {
     }
 
     private MaterialResponse convertToMaterialResponse(Material material, String currentUsername) {
+        // 检查当前用户是否收藏了该素材
         boolean isFavorite = false;
-
         if (currentUsername != null) {
             isFavorite = materialService.checkIsFavorite(material.getId(), currentUsername);
         }
@@ -182,14 +143,14 @@ public class MaterialController {
                 .tags(material.getTags())
                 .status(material.getStatus().name())
                 .rejectReason(material.getRejectReason())
-                .isFavorite(isFavorite)
+                .isFavorite(isFavorite) // 正确设置收藏状态
                 .createdAt(material.getCreatedAt())
                 .build();
     }
 
     private MaterialDetailResponse convertToMaterialDetailResponse(Material material, String currentUsername) {
+        // 检查当前用户是否收藏了该素材
         boolean isFavorite = false;
-
         if (currentUsername != null) {
             isFavorite = materialService.checkIsFavorite(material.getId(), currentUsername);
         }
@@ -208,7 +169,7 @@ public class MaterialController {
                 .tags(material.getTags())
                 .license(material.getLicense())
                 .status(material.getStatus().name())
-                .isFavorite(isFavorite)
+                .isFavorite(isFavorite) // 正确设置收藏状态
                 .createdAt(material.getCreatedAt())
                 .build();
     }
