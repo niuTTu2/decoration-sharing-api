@@ -18,6 +18,7 @@ public class MaterialResponse {
     private String imageUrl;
     private String thumbUrl;
     private Long categoryId;
+    private String description;
     private String categoryName;
     private String uploaderName;
     private String uploaderAvatar;

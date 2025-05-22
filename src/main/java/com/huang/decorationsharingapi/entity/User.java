@@ -54,6 +54,10 @@ public class User {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    // 添加最后登录时间字段
+    @Column(name = "last_login_at")
+    private LocalDateTime lastLoginAt;
+
     public enum Role {
         USER, ADMIN
     }

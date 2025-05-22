@@ -42,14 +42,10 @@ public class AdminController {
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String keyword) {
 
-        Page<User> users = adminService.getUsers(page, pageSize, role, status, keyword);
-
-        List<UserResponse> content = users.getContent().stream()
-                .map(this::convertToUserResponse)
-                .collect(Collectors.toList());
+        Page<UserResponse> users = adminService.getUsers(page, pageSize, role, status, keyword);
 
         return ResponseEntity.ok(new PagedResponse<>(
-                content,
+                users.getContent(),
                 users.getNumber(),
                 users.getSize(),
                 users.getTotalElements(),
@@ -63,8 +59,8 @@ public class AdminController {
             @PathVariable Long id,
             @Valid @RequestBody UpdateUserRequest updateRequest) {
 
-        User user = adminService.updateUser(id, updateRequest);
-        return ResponseEntity.ok(convertToUserResponse(user));
+        UserResponse user = adminService.updateUser(id, updateRequest);
+        return ResponseEntity.ok(user);
     }
 
     @DeleteMapping("/users/{id}")
@@ -188,6 +184,7 @@ public class AdminController {
         return MaterialResponse.builder()
                 .id(material.getId())
                 .title(material.getTitle())
+                .description(material.getDescription())
                 .imageUrl(material.getImageUrl())
                 .thumbUrl(material.getThumbUrl())
                 .categoryId(material.getCategory().getId())

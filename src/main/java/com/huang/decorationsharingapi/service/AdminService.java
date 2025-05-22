@@ -4,6 +4,7 @@ package com.huang.decorationsharingapi.service;
 import com.huang.decorationsharingapi.dto.request.CategoryRequest;
 import com.huang.decorationsharingapi.dto.request.UpdateUserRequest;
 import com.huang.decorationsharingapi.dto.response.AdminStatsResponse;
+import com.huang.decorationsharingapi.dto.response.UserResponse;
 import com.huang.decorationsharingapi.entity.Category;
 import com.huang.decorationsharingapi.entity.Material;
 import com.huang.decorationsharingapi.entity.User;
@@ -12,10 +13,7 @@ import com.huang.decorationsharingapi.repository.CategoryRepository;
 import com.huang.decorationsharingapi.repository.MaterialRepository;
 import com.huang.decorationsharingapi.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,6 +22,7 @@ import javax.persistence.criteria.Predicate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -34,7 +33,7 @@ public class AdminService {
     private final CategoryRepository categoryRepository;
 
     // ========== 用户管理 ==========
-    public Page<User> getUsers(int page, int size, String role, String status, String keyword) {
+    public Page<UserResponse> getUsers(int page, int size, String role, String status, String keyword) {
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
 
         Specification<User> spec = (root, query, cb) -> {
@@ -72,11 +71,38 @@ public class AdminService {
             return cb.and(predicates.toArray(new Predicate[0]));
         };
 
-        return userRepository.findAll(spec, pageable);
+        Page<User> usersPage = userRepository.findAll(spec, pageable);
+
+        // 转换为UserResponse
+        List<UserResponse> userResponses = usersPage.getContent().stream()
+                .map(user -> convertToUserResponse(user))
+                .collect(Collectors.toList());
+
+        return new PageImpl<>(userResponses, pageable, usersPage.getTotalElements());
+    }
+
+    // 将User实体转换为UserResponse
+    private UserResponse convertToUserResponse(User user) {
+        // 获取用户上传的素材数量
+        Integer materialCount = (int) materialRepository.countByUser(user);
+
+        // 构建UserResponse
+        return UserResponse.builder()
+                .id(user.getId())
+                .username(user.getUsername())
+                .email(user.getEmail())
+                .avatar(user.getAvatar())
+                .bio(user.getBio())
+                .role(user.getRole().name())
+                .status(user.getStatus().name())
+                .materialCount(materialCount)
+                .createdAt(user.getCreatedAt())
+                .lastLoginAt(user.getLastLoginAt())
+                .build();
     }
 
     @Transactional
-    public User updateUser(Long id, UpdateUserRequest updateRequest) {
+    public UserResponse updateUser(Long id, UpdateUserRequest updateRequest) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", id));
 
@@ -112,7 +138,8 @@ public class AdminService {
             }
         }
 
-        return userRepository.save(user);
+        User savedUser = userRepository.save(user);
+        return convertToUserResponse(savedUser);
     }
 
     @Transactional
@@ -122,7 +149,6 @@ public class AdminService {
 
         userRepository.delete(user);
     }
-
     // ========== 素材管理 ==========
     public Page<Material> getMaterials(int page, int size, String status, Long categoryId, String keyword) {
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));

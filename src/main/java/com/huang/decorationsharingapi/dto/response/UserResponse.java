@@ -19,5 +19,7 @@ public class UserResponse {
     private String bio;
     private String role;
     private String status;
+    private Integer materialCount; // 添加素材数量
     private LocalDateTime createdAt;
+    private LocalDateTime lastLoginAt; // 添加最后登录时间
 }
